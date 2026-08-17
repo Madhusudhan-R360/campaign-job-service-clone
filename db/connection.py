@@ -14,6 +14,10 @@ db = mongo_client[
     settings.database_name
 ]
 
+campaign_analytics_collection = (
+    db["campaign_analytics"]
+)
+
 
 redis_client = redis.Redis(
     host=settings.redis_host,
