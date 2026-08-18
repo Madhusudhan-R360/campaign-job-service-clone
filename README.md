@@ -2,22 +2,25 @@
 
 A simplified clone of an enterprise Campaign Job Service built using FastAPI, MongoDB, and Redis.
 
-This service represents the operational automation layer of a campaign ecosystem. It focuses on analytics generation, campaign maintenance, lifecycle automation, monitoring, and reporting jobs.
+This project replicates the operational automation layer of a campaign ecosystem. It focuses on analytics generation, user lifecycle processing, background jobs, monitoring, reporting, and workflow automation.
 
 ---
 
 # Project Overview
 
-The Campaign Job Service is an internal service responsible for:
+In a real campaign platform, the Job Service is responsible for executing scheduled operations and maintaining system health.
+
+Typical responsibilities include:
 
 - Campaign Analytics
-- User Lifecycle Jobs
-- Order Processing Jobs
-- Reminder Jobs
+- User Lifecycle Management
+- Voucher Processing
+- Order Reconciliation
+- Reminder Notifications
 - Monitoring & Alerting
 - Operational Reporting
 
-This project recreates those concepts in a simplified and learning-focused implementation.
+This clone recreates those concepts in a simplified and learning-focused manner.
 
 ---
 
@@ -31,8 +34,8 @@ Implemented:
 - MongoDB Integration
 - Redis Integration
 - Environment Configuration
-- Health Check API
 - Swagger Documentation
+- Health Check API
 
 ---
 
@@ -42,9 +45,51 @@ Implemented:
 
 - Campaign Analytics Collection
 - Generate Analytics API
-- Get Analytics API
-- Campaign Analytics Lookup
+- Get All Analytics API
+- Get Campaign Analytics API
 - MongoDB Persistence
+
+---
+
+## ✅ Phase 3 - User Lifecycle Module
+
+Implemented:
+
+- User Collection
+- Create User API
+- Get Users API
+- User Expiry Job
+- User Disable Job
+- User Status Management
+
+---
+
+# Architecture
+
+```text
+                    Campaign CMS
+                          |
+                          |
+                          v
+
+              Campaign Job Service Clone
+                          |
+ ------------------------------------------------
+ |                 |               |            |
+ v                 v               v            v
+
+Analytics      User Jobs     Monitoring   Order Jobs
+   Jobs
+
+                          |
+                          v
+
+                       MongoDB
+                          |
+                          v
+
+                        Redis
+```
 
 ---
 
@@ -54,7 +99,13 @@ Implemented:
 campaign-job-service-clone/
 
 ├── api/
-│   └── analytics/
+│
+│   ├── analytics/
+│   │   ├── app.py
+│   │   ├── schema.py
+│   │   └── utility.py
+│   │
+│   └── users/
 │       ├── app.py
 │       ├── schema.py
 │       └── utility.py
@@ -80,41 +131,12 @@ campaign-job-service-clone/
 
 ---
 
-# Architecture
+# Technology Stack
 
-```text
-                     Campaign CMS
-                           |
-                           |
-                           v
-
-               Campaign Job Service Clone
-                           |
-      -----------------------------------------
-      |                 |                     |
-      v                 v                     v
-
- Analytics      Lifecycle Jobs      Monitoring
-    Jobs
-
-                           |
-                           v
-
-                        MongoDB
-                           |
-                           v
-
-                         Redis
-```
-
----
-
-# Tech Stack
-
-- FastAPI
 - Python 3.12
+- FastAPI
 - MongoDB
-- Motor (Async MongoDB Driver)
+- Motor
 - Redis
 - Pydantic
 - Uvicorn
@@ -139,8 +161,6 @@ REDIS_DB=0
 ENVIRONMENT=DEV
 ```
 
-> Update the MongoDB port if your MongoDB container uses a different mapping.
-
 ---
 
 # Installation
@@ -148,12 +168,10 @@ ENVIRONMENT=DEV
 ## Clone Repository
 
 ```bash
-git clone https://github.com/<your-username>/campaign-job-service-clone.git
+git clone https://github.com/Madhusudhan-R360/campaign-job-service-clone.git
 
 cd campaign-job-service-clone
 ```
-
----
 
 ## Create Virtual Environment
 
@@ -161,23 +179,19 @@ cd campaign-job-service-clone
 python3 -m venv venv
 ```
 
----
-
 ## Activate Virtual Environment
 
-Linux / Mac
+Linux / Mac:
 
 ```bash
 source venv/bin/activate
 ```
 
-Windows
+Windows:
 
 ```bash
 venv\Scripts\activate
 ```
-
----
 
 ## Install Dependencies
 
@@ -187,7 +201,7 @@ pip install -r requirements.txt
 
 ---
 
-# Running the Application
+# Running The Application
 
 ```bash
 uvicorn main:app --reload --port 8002
@@ -199,7 +213,7 @@ Application:
 http://localhost:8002
 ```
 
-Swagger UI:
+Swagger:
 
 ```text
 http://localhost:8002/docs
@@ -207,9 +221,11 @@ http://localhost:8002/docs
 
 ---
 
-# Health Check API
+# Health Module
 
-## Endpoint
+## Health Check
+
+### Endpoint
 
 ```http
 GET /health
@@ -225,15 +241,15 @@ GET /health
 
 Purpose:
 
-- Verify API availability
 - Verify application startup
+- Verify service availability
 - Verify deployment health
 
 ---
 
 # Analytics Module
 
-The Analytics Module simulates campaign analytics generation similar to the production Campaign Job Service.
+This module simulates the Analytics Cron functionality of the real Campaign Job Service.
 
 ---
 
@@ -245,7 +261,7 @@ The Analytics Module simulates campaign analytics generation similar to the prod
 POST /analytics/generate
 ```
 
-### Request Body
+### Request
 
 ```json
 {
@@ -277,22 +293,7 @@ POST /analytics/generate
 GET /analytics
 ```
 
-### Response
-
-```json
-[
-  {
-    "_id": "689f123abc",
-    "campaign_id": "CMP001",
-    "campaign_name": "Summer Rewards",
-    "active_users": 120,
-    "expired_users": 10,
-    "total_orders": 75,
-    "transaction_volume": 125000,
-    "generated_at": "2025-08-18T10:30:00"
-  }
-]
-```
+Returns all analytics records.
 
 ---
 
@@ -304,36 +305,23 @@ GET /analytics
 GET /analytics/{campaign_id}
 ```
 
-### Example
+Example:
 
 ```http
 GET /analytics/CMP001
 ```
 
-### Response
-
-```json
-[
-  {
-    "_id": "689f123abc",
-    "campaign_id": "CMP001",
-    "campaign_name": "Summer Rewards",
-    "active_users": 120,
-    "expired_users": 10,
-    "total_orders": 75,
-    "transaction_volume": 125000,
-    "generated_at": "2025-08-18T10:30:00"
-  }
-]
-```
-
 ---
 
-# MongoDB Collection
+## Analytics Collection
 
-## campaign_analytics
+### Collection
 
-Example Document:
+```text
+campaign_analytics
+```
+
+### Example Document
 
 ```json
 {
@@ -343,22 +331,193 @@ Example Document:
   "expired_users": 10,
   "total_orders": 75,
   "transaction_volume": 125000,
-  "generated_at": "2025-08-18T10:30:00"
+  "generated_at": "2026-08-18T10:30:00"
 }
 ```
 
 ---
 
-# Local Development Ports
+# User Lifecycle Module
 
-Recommended setup:
+This module simulates the real production jobs:
 
 ```text
-Campaign CMS Clone            -> 8000
+user-expire
 
-Campaign Notification Clone   -> 8001
+user-disable
+```
 
-Campaign Job Service Clone    -> 8002
+---
+
+## User Status Flow
+
+```text
+ACTIVE
+   |
+   v
+EXPIRED
+   |
+   v
+DISABLED
+```
+
+---
+
+## Create User
+
+### Endpoint
+
+```http
+POST /users
+```
+
+### Request
+
+```json
+{
+  "user_id": "USR001",
+  "name": "John Doe",
+  "email": "john@example.com",
+  "campaign_id": "CMP001",
+  "expiry_date": "2026-08-20T00:00:00"
+}
+```
+
+### Response
+
+```json
+{
+  "success": true,
+  "user_id": "689f123abc"
+}
+```
+
+---
+
+## Get All Users
+
+### Endpoint
+
+```http
+GET /users
+```
+
+Returns all users.
+
+---
+
+## Run User Expiry Job
+
+### Endpoint
+
+```http
+POST /jobs/user-expire
+```
+
+### Response
+
+```json
+{
+  "success": true,
+  "expired_users": 1
+}
+```
+
+### Behaviour
+
+```text
+ACTIVE → EXPIRED
+```
+
+for users whose expiry date has passed.
+
+---
+
+## Run User Disable Job
+
+### Endpoint
+
+```http
+POST /jobs/user-disable
+```
+
+### Response
+
+```json
+{
+  "success": true,
+  "disabled_users": 1
+}
+```
+
+### Behaviour
+
+```text
+EXPIRED → DISABLED
+```
+
+---
+
+## Users Collection
+
+### Collection
+
+```text
+users
+```
+
+### Example Document
+
+```json
+{
+  "user_id": "USR001",
+  "name": "John Doe",
+  "email": "john@example.com",
+  "campaign_id": "CMP001",
+  "expiry_date": "2026-08-20T00:00:00",
+  "status": "ACTIVE",
+  "created_at": "2026-08-18T10:00:00"
+}
+```
+
+---
+
+# MongoDB Collections
+
+Implemented:
+
+```text
+campaign_analytics
+
+users
+```
+
+Planned:
+
+```text
+orders
+
+order_items
+
+voucher_details
+
+monitoring_logs
+
+notifications
+```
+
+---
+
+# Local Port Configuration
+
+Recommended local setup:
+
+```text
+Campaign CMS Clone            → 8000
+
+Campaign Notification Clone   → 8001
+
+Campaign Job Service Clone    → 8002
 ```
 
 ---
@@ -370,7 +529,7 @@ Campaign Job Service Clone    -> 8002
 
 ✅ Phase 2 - Analytics Module
 
-⬜ Phase 3 - User Lifecycle Module
+✅ Phase 3 - User Lifecycle Module
 
 ⬜ Phase 4 - Order Reconciliation Module
 
@@ -378,31 +537,48 @@ Campaign Job Service Clone    -> 8002
 
 ⬜ Phase 6 - Monitoring Module
 
-⬜ Phase 7 - Dockerization
+⬜ Phase 7 - Dockerization & Deployment
 ```
 
 ---
 
 # Upcoming Phase
 
-## Phase 3 - User Lifecycle Module
+## Phase 4 - Order Reconciliation Module
 
-Planned APIs:
+Inspired by the production endpoint:
 
 ```http
-POST /jobs/user-expire
-
-POST /jobs/user-disable
-
-GET /jobs/users
+POST /campaign/jobs/get-order-status
 ```
 
 Features:
 
-- Active Users
-- Expired Users
-- Disabled Users
-- User Status Tracking
+```text
+Order Creation
+
+Order Tracking
+
+Mock ERP Integration
+
+Voucher Assignment
+
+Order Reconciliation
+
+Order Status Updates
+```
+
+Planned APIs:
+
+```http
+POST /orders
+
+GET /orders
+
+GET /orders/{order_id}
+
+POST /jobs/reconcile-orders
+```
 
 ---
 
@@ -415,15 +591,16 @@ This project demonstrates:
 - Redis Integration
 - REST API Design
 - Analytics Processing
-- Backend Service Architecture
-- Campaign Automation Concepts
-- Microservice Design Patterns
+- User Lifecycle Automation
+- Background Job Design
+- Microservice Architecture
+- Campaign Operations Design Patterns
 
 ---
 
 # Final Goal
 
-The Campaign Job Service Clone aims to replicate the operational automation layer used in campaign platforms.
+The Campaign Job Service Clone aims to replicate the operational automation backbone of an enterprise campaign platform.
 
 ```text
 Campaign Data
@@ -432,7 +609,10 @@ Campaign Data
 Analytics Jobs
        |
        v
-Lifecycle Jobs
+User Lifecycle Jobs
+       |
+       v
+Order Processing Jobs
        |
        v
 Monitoring Jobs
@@ -441,4 +621,4 @@ Monitoring Jobs
 Operational Reports
 ```
 
-By the end of the project, the service will support analytics, user lifecycle management, order automation, monitoring, reminders, and reporting workflows similar to an enterprise Campaign Job Service.
+By the end of the project, the service will support analytics generation, lifecycle management, order reconciliation, monitoring, reporting, reminders, and operational automation similar to a real production Campaign Job Service.
