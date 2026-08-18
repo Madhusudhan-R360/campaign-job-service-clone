@@ -18,6 +18,7 @@ campaign_analytics_collection = (
     db["campaign_analytics"]
 )
 
+user_collection = db["users"]
 
 redis_client = redis.Redis(
     host=settings.redis_host,
