@@ -8,6 +8,10 @@ from api.users.app import (
     router as user_router
 )
 
+from api.orders.app import (
+    router as order_router
+)
+
 app = FastAPI(
     title="Campaign Job Service Clone"
 )
@@ -18,6 +22,10 @@ app.include_router(
 
 app.include_router(
     user_router
+)
+
+app.include_router(
+    order_router
 )
 
 @app.get("/health")
