@@ -20,6 +20,10 @@ campaign_analytics_collection = (
 
 user_collection = db["users"]
 
+orders_collection = db["orders"]
+
+voucher_collection = db["vouchers"]
+
 redis_client = redis.Redis(
     host=settings.redis_host,
     port=settings.redis_port,
