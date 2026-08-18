@@ -2,25 +2,25 @@
 
 A simplified clone of an enterprise Campaign Job Service built using FastAPI, MongoDB, and Redis.
 
-This project replicates the operational automation layer of a campaign ecosystem. It focuses on analytics generation, user lifecycle processing, background jobs, monitoring, reporting, and workflow automation.
+This project recreates the operational automation layer of a campaign ecosystem. The service is responsible for analytics generation, user lifecycle management, order reconciliation, monitoring, reporting, and workflow automation.
 
 ---
 
 # Project Overview
 
-In a real campaign platform, the Job Service is responsible for executing scheduled operations and maintaining system health.
+In a production campaign platform, the Job Service executes business operations that keep campaigns synchronized and healthy.
 
 Typical responsibilities include:
 
 - Campaign Analytics
 - User Lifecycle Management
-- Voucher Processing
-- Order Reconciliation
-- Reminder Notifications
+- Order Processing
+- Voucher Assignment
+- Reminder Jobs
 - Monitoring & Alerting
 - Operational Reporting
 
-This clone recreates those concepts in a simplified and learning-focused manner.
+This clone implements those concepts in a simplified and learning-focused architecture.
 
 ---
 
@@ -43,11 +43,10 @@ Implemented:
 
 Implemented:
 
-- Campaign Analytics Collection
+- Analytics Collection
 - Generate Analytics API
 - Get All Analytics API
-- Get Campaign Analytics API
-- MongoDB Persistence
+- Get Analytics By Campaign API
 
 ---
 
@@ -60,7 +59,22 @@ Implemented:
 - Get Users API
 - User Expiry Job
 - User Disable Job
-- User Status Management
+- User Status Tracking
+
+---
+
+## ✅ Phase 4 - Order Reconciliation Module
+
+Implemented:
+
+- Orders Collection
+- Vouchers Collection
+- Create Order API
+- Get Orders API
+- Get Single Order API
+- Reconcile Orders Job
+- Voucher Generation
+- Order Completion Workflow
 
 ---
 
@@ -74,12 +88,11 @@ Implemented:
 
               Campaign Job Service Clone
                           |
- ------------------------------------------------
- |                 |               |            |
- v                 v               v            v
+ ----------------------------------------------------------------
+ |                 |                 |               |           |
+ v                 v                 v               v           v
 
-Analytics      User Jobs     Monitoring   Order Jobs
-   Jobs
+Analytics      User Jobs      Order Jobs      Monitoring    Reporting
 
                           |
                           v
@@ -105,7 +118,12 @@ campaign-job-service-clone/
 │   │   ├── schema.py
 │   │   └── utility.py
 │   │
-│   └── users/
+│   ├── users/
+│   │   ├── app.py
+│   │   ├── schema.py
+│   │   └── utility.py
+│   │
+│   └── orders/
 │       ├── app.py
 │       ├── schema.py
 │       └── utility.py
@@ -181,13 +199,13 @@ python3 -m venv venv
 
 ## Activate Virtual Environment
 
-Linux / Mac:
+Linux / Mac
 
 ```bash
 source venv/bin/activate
 ```
 
-Windows:
+Windows
 
 ```bash
 venv\Scripts\activate
@@ -213,7 +231,7 @@ Application:
 http://localhost:8002
 ```
 
-Swagger:
+Swagger UI:
 
 ```text
 http://localhost:8002/docs
@@ -239,17 +257,11 @@ GET /health
 }
 ```
 
-Purpose:
-
-- Verify application startup
-- Verify service availability
-- Verify deployment health
-
 ---
 
 # Analytics Module
 
-This module simulates the Analytics Cron functionality of the real Campaign Job Service.
+Simulates campaign analytics generation jobs.
 
 ---
 
@@ -274,15 +286,6 @@ POST /analytics/generate
 }
 ```
 
-### Response
-
-```json
-{
-  "success": true,
-  "analytics_id": "689f123abc"
-}
-```
-
 ---
 
 ## Get All Analytics
@@ -292,8 +295,6 @@ POST /analytics/generate
 ```http
 GET /analytics
 ```
-
-Returns all analytics records.
 
 ---
 
@@ -305,41 +306,19 @@ Returns all analytics records.
 GET /analytics/{campaign_id}
 ```
 
-Example:
-
-```http
-GET /analytics/CMP001
-```
-
 ---
 
-## Analytics Collection
-
-### Collection
+## Collection
 
 ```text
 campaign_analytics
-```
-
-### Example Document
-
-```json
-{
-  "campaign_id": "CMP001",
-  "campaign_name": "Summer Rewards",
-  "active_users": 120,
-  "expired_users": 10,
-  "total_orders": 75,
-  "transaction_volume": 125000,
-  "generated_at": "2026-08-18T10:30:00"
-}
 ```
 
 ---
 
 # User Lifecycle Module
 
-This module simulates the real production jobs:
+Simulates production jobs:
 
 ```text
 user-expire
@@ -349,7 +328,7 @@ user-disable
 
 ---
 
-## User Status Flow
+## User Lifecycle Flow
 
 ```text
 ACTIVE
@@ -383,26 +362,15 @@ POST /users
 }
 ```
 
-### Response
-
-```json
-{
-  "success": true,
-  "user_id": "689f123abc"
-}
-```
-
 ---
 
-## Get All Users
+## Get Users
 
 ### Endpoint
 
 ```http
 GET /users
 ```
-
-Returns all users.
 
 ---
 
@@ -414,22 +382,11 @@ Returns all users.
 POST /jobs/user-expire
 ```
 
-### Response
-
-```json
-{
-  "success": true,
-  "expired_users": 1
-}
-```
-
-### Behaviour
+### Status Change
 
 ```text
 ACTIVE → EXPIRED
 ```
-
-for users whose expiry date has passed.
 
 ---
 
@@ -441,16 +398,7 @@ for users whose expiry date has passed.
 POST /jobs/user-disable
 ```
 
-### Response
-
-```json
-{
-  "success": true,
-  "disabled_users": 1
-}
-```
-
-### Behaviour
+### Status Change
 
 ```text
 EXPIRED → DISABLED
@@ -458,25 +406,141 @@ EXPIRED → DISABLED
 
 ---
 
-## Users Collection
-
-### Collection
+## Collection
 
 ```text
 users
 ```
 
-### Example Document
+---
+
+# Order Reconciliation Module
+
+Simulates the production ERP synchronization and voucher reconciliation jobs.
+
+---
+
+## Order Lifecycle
+
+```text
+ORDER CREATED
+       |
+       v
+
+PENDING
+       |
+       v
+
+/jobs/reconcile-orders
+       |
+       v
+
+COMPLETED
+       |
+       v
+
+Voucher Assigned
+```
+
+---
+
+## Create Order
+
+### Endpoint
+
+```http
+POST /orders
+```
+
+### Request
 
 ```json
 {
+  "order_id": "ORD001",
   "user_id": "USR001",
-  "name": "John Doe",
-  "email": "john@example.com",
   "campaign_id": "CMP001",
-  "expiry_date": "2026-08-20T00:00:00",
-  "status": "ACTIVE",
-  "created_at": "2026-08-18T10:00:00"
+  "amount": 5000
+}
+```
+
+### Response
+
+```json
+{
+  "success": true,
+  "message": "Order Created"
+}
+```
+
+---
+
+## Get All Orders
+
+### Endpoint
+
+```http
+GET /orders
+```
+
+---
+
+## Get Order By ID
+
+### Endpoint
+
+```http
+GET /orders/{order_id}
+```
+
+Example:
+
+```http
+GET /orders/ORD001
+```
+
+---
+
+## Reconcile Orders Job
+
+### Endpoint
+
+```http
+POST /jobs/reconcile-orders
+```
+
+### Response
+
+```json
+{
+  "success": true,
+  "processed_orders": 1
+}
+```
+
+---
+
+## Example Order
+
+```json
+{
+  "order_id": "ORD001",
+  "user_id": "USR001",
+  "campaign_id": "CMP001",
+  "amount": 5000,
+  "status": "COMPLETED",
+  "voucher_code": "A7B81D21"
+}
+```
+
+---
+
+## Example Voucher
+
+```json
+{
+  "order_id": "ORD001",
+  "voucher_code": "A7B81D21",
+  "created_at": "2026-08-18T12:00:00"
 }
 ```
 
@@ -490,27 +554,25 @@ Implemented:
 campaign_analytics
 
 users
+
+orders
+
+vouchers
 ```
 
 Planned:
 
 ```text
-orders
-
-order_items
-
-voucher_details
+notifications
 
 monitoring_logs
 
-notifications
+reminders
 ```
 
 ---
 
-# Local Port Configuration
-
-Recommended local setup:
+# Local Development Ports
 
 ```text
 Campaign CMS Clone            → 8000
@@ -522,7 +584,7 @@ Campaign Job Service Clone    → 8002
 
 ---
 
-# Completed Phases
+# Project Progress
 
 ```text
 ✅ Phase 1 - Foundation Setup
@@ -531,7 +593,7 @@ Campaign Job Service Clone    → 8002
 
 ✅ Phase 3 - User Lifecycle Module
 
-⬜ Phase 4 - Order Reconciliation Module
+✅ Phase 4 - Order Reconciliation Module
 
 ⬜ Phase 5 - Reminder Module
 
@@ -544,40 +606,38 @@ Campaign Job Service Clone    → 8002
 
 # Upcoming Phase
 
-## Phase 4 - Order Reconciliation Module
+## Phase 5 - Reminder Module
 
-Inspired by the production endpoint:
-
-```http
-POST /campaign/jobs/get-order-status
-```
-
-Features:
+Inspired by production jobs:
 
 ```text
-Order Creation
+Mail Expiry Reminder
 
-Order Tracking
+Campaign Reminder Jobs
 
-Mock ERP Integration
-
-Voucher Assignment
-
-Order Reconciliation
-
-Order Status Updates
+Notification Triggers
 ```
 
 Planned APIs:
 
 ```http
-POST /orders
+POST /jobs/send-reminders
 
-GET /orders
+GET /reminders
 
-GET /orders/{order_id}
+POST /reminders
+```
 
-POST /jobs/reconcile-orders
+Features:
+
+```text
+Reminder Creation
+
+Expiry Detection
+
+Reminder Processing
+
+Reminder History
 ```
 
 ---
@@ -591,16 +651,17 @@ This project demonstrates:
 - Redis Integration
 - REST API Design
 - Analytics Processing
-- User Lifecycle Automation
+- User Lifecycle Management
+- Order Reconciliation
+- Voucher Processing
 - Background Job Design
 - Microservice Architecture
-- Campaign Operations Design Patterns
 
 ---
 
 # Final Goal
 
-The Campaign Job Service Clone aims to replicate the operational automation backbone of an enterprise campaign platform.
+The Campaign Job Service Clone aims to simulate the automation backbone of an enterprise campaign platform.
 
 ```text
 Campaign Data
@@ -612,7 +673,7 @@ Analytics Jobs
 User Lifecycle Jobs
        |
        v
-Order Processing Jobs
+Order Reconciliation Jobs
        |
        v
 Monitoring Jobs
@@ -621,4 +682,4 @@ Monitoring Jobs
 Operational Reports
 ```
 
-By the end of the project, the service will support analytics generation, lifecycle management, order reconciliation, monitoring, reporting, reminders, and operational automation similar to a real production Campaign Job Service.
+By the end of the project, the service will support analytics generation, user lifecycle automation, voucher-based order processing, reminders, monitoring, reporting, and operational workflows similar to a real enterprise Campaign Job Service.
