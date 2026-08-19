@@ -16,6 +16,10 @@ from api.reminders.app import (
     router as reminder_router
 )
 
+from api.monitoring.app import (
+    router as monitoring_router
+)
+
 app = FastAPI(
     title="Campaign Job Service Clone"
 )
@@ -34,6 +38,10 @@ app.include_router(
 
 app.include_router(
     reminder_router
+)
+
+app.include_router(
+    monitoring_router
 )
 
 @app.get("/health")

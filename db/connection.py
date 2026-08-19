@@ -26,6 +26,10 @@ voucher_collection = db["vouchers"]
 
 reminders_collection = db["reminders"]
 
+monitoring_collection = (
+    db["monitoring_logs"]
+)
+
 redis_client = redis.Redis(
     host=settings.redis_host,
     port=settings.redis_port,
