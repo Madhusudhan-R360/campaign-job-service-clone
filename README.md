@@ -2,25 +2,24 @@
 
 A simplified clone of an enterprise Campaign Job Service built using FastAPI, MongoDB, and Redis.
 
-This project simulates the operational automation layer of a campaign ecosystem. The service is responsible for analytics generation, user lifecycle processing, order reconciliation, reminder processing, monitoring, and reporting workflows.
+This project simulates the operational automation layer of a campaign management ecosystem. The service handles analytics generation, user lifecycle management, order reconciliation, reminder processing, monitoring, and reporting workflows.
 
 ---
 
 # Project Overview
 
-In a production campaign platform, the Job Service executes scheduled and operational jobs that maintain system health and automate business workflows.
+In a production campaign platform, background services continuously execute operational jobs such as:
 
-Responsibilities include:
-
-- Campaign Analytics
-- User Lifecycle Management
-- Voucher Processing
+- Analytics Generation
+- User Expiry Processing
+- User Disable Processing
 - Order Reconciliation
-- Reminder Management
+- Voucher Assignment
+- Reminder Processing
 - Monitoring & Alerting
 - Operational Reporting
 
-This project recreates those concepts using FastAPI and MongoDB.
+This project recreates those responsibilities using FastAPI and MongoDB in a simplified microservice architecture.
 
 ---
 
@@ -33,9 +32,9 @@ Implemented:
 - FastAPI Application
 - MongoDB Integration
 - Redis Integration
-- Environment Configuration
+- Environment Variables
+- Health Check Endpoint
 - Swagger Documentation
-- Health Check API
 
 ---
 
@@ -55,12 +54,12 @@ Implemented:
 
 Implemented:
 
-- User Collection
+- Users Collection
 - Create User API
 - Get Users API
 - User Expiry Job
 - User Disable Job
-- User Status Tracking
+- User Status Management
 
 ---
 
@@ -73,7 +72,7 @@ Implemented:
 - Create Order API
 - Get Orders API
 - Get Order API
-- Reconcile Orders Job
+- Order Reconciliation Job
 - Voucher Assignment Workflow
 
 ---
@@ -85,10 +84,23 @@ Implemented:
 - Reminders Collection
 - Create Reminder API
 - Get Reminders API
-- Send Reminders Job
+- Reminder Processing Job
 - Expiry Detection Logic
 - Reminder Tracking
-- Reminder History
+
+---
+
+## ✅ Phase 6 - Monitoring Module
+
+Implemented:
+
+- Monitoring Logs Collection
+- Monitoring Dashboard API
+- Monitoring Logs API
+- System Monitoring Job
+- User Metrics Reporting
+- Order Metrics Reporting
+- Historical Monitoring Logs
 
 ---
 
@@ -102,11 +114,11 @@ Implemented:
 
               Campaign Job Service Clone
                           |
- -------------------------------------------------------------------
- |                |                |               |               |
- v                v                v               v               v
+ ----------------------------------------------------------------------
+ |              |              |             |              |          |
+ v              v              v             v              v          v
 
-Analytics     User Jobs      Order Jobs     Reminder Jobs    Monitoring
+Analytics    User Jobs     Order Jobs   Reminders   Monitoring   Reports
 
                           |
                           v
@@ -142,7 +154,12 @@ campaign-job-service-clone/
 │   │   ├── schema.py
 │   │   └── utility.py
 │   │
-│   └── reminders/
+│   ├── reminders/
+│   │   ├── app.py
+│   │   ├── schema.py
+│   │   └── utility.py
+│   │
+│   └── monitoring/
 │       ├── app.py
 │       ├── schema.py
 │       └── utility.py
@@ -216,15 +233,15 @@ cd campaign-job-service-clone
 python3 -m venv venv
 ```
 
-## Activate Environment
+## Activate Virtual Environment
 
-Linux / Mac:
+Linux / Mac
 
 ```bash
 source venv/bin/activate
 ```
 
-Windows:
+Windows
 
 ```bash
 venv\Scripts\activate
@@ -244,13 +261,13 @@ pip install -r requirements.txt
 uvicorn main:app --reload --port 8002
 ```
 
-Application:
+Application URL:
 
 ```text
 http://localhost:8002
 ```
 
-Swagger Documentation:
+Swagger UI:
 
 ```text
 http://localhost:8002/docs
@@ -260,13 +277,13 @@ http://localhost:8002/docs
 
 # Health Module
 
-## Endpoint
+## Health Check
 
 ```http
 GET /health
 ```
 
-### Response
+Response:
 
 ```json
 {
@@ -280,26 +297,9 @@ GET /health
 
 ## Generate Analytics
 
-### Endpoint
-
 ```http
 POST /analytics/generate
 ```
-
-### Request
-
-```json
-{
-  "campaign_id": "CMP001",
-  "campaign_name": "Summer Rewards",
-  "active_users": 120,
-  "expired_users": 10,
-  "total_orders": 75,
-  "transaction_volume": 125000
-}
-```
-
----
 
 ## Get All Analytics
 
@@ -307,15 +307,13 @@ POST /analytics/generate
 GET /analytics
 ```
 
----
-
 ## Get Analytics By Campaign
 
 ```http
 GET /analytics/{campaign_id}
 ```
 
-### Collection
+Collection:
 
 ```text
 campaign_analytics
@@ -331,57 +329,39 @@ campaign_analytics
 ACTIVE
    |
    v
+
 EXPIRED
    |
    v
+
 DISABLED
 ```
 
----
-
-## Create User
+### Create User
 
 ```http
 POST /users
 ```
 
----
-
-## Get Users
+### Get Users
 
 ```http
 GET /users
 ```
 
----
-
-## Expire Users Job
+### Expire Users
 
 ```http
 POST /jobs/user-expire
 ```
 
-### Status Change
-
-```text
-ACTIVE → EXPIRED
-```
-
----
-
-## Disable Users Job
+### Disable Users
 
 ```http
 POST /jobs/user-disable
 ```
 
-### Status Change
-
-```text
-EXPIRED → DISABLED
-```
-
-### Collection
+Collection:
 
 ```text
 users
@@ -390,10 +370,6 @@ users
 ---
 
 # Order Reconciliation Module
-
-Simulates production ERP-based voucher reconciliation.
-
----
 
 ## Order Flow
 
@@ -417,39 +393,31 @@ COMPLETED
 Voucher Assigned
 ```
 
----
-
-## Create Order
+### Create Order
 
 ```http
 POST /orders
 ```
 
----
-
-## Get Orders
+### Get Orders
 
 ```http
 GET /orders
 ```
 
----
-
-## Get Order
+### Get Single Order
 
 ```http
 GET /orders/{order_id}
 ```
 
----
-
-## Reconcile Orders
+### Reconcile Orders
 
 ```http
 POST /jobs/reconcile-orders
 ```
 
-### Collections
+Collections:
 
 ```text
 orders
@@ -461,105 +429,147 @@ vouchers
 
 # Reminder Module
 
-Simulates expiry reminder workflows.
-
----
-
 ## Reminder Flow
 
 ```text
-User Expiry Approaching
-          |
-          v
+Expiry Approaching
+        |
+        v
 
 /jobs/send-reminders
-          |
-          v
+        |
+        v
 
 Reminder Generated
-          |
-          v
+        |
+        v
 
 Reminder Stored
 ```
 
----
-
-## Create Reminder
-
-### Endpoint
+### Create Reminder
 
 ```http
 POST /reminders
 ```
 
-### Request
-
-```json
-{
-  "user_id": "USR001",
-  "campaign_id": "CMP001",
-  "message": "Reward expires soon."
-}
-```
-
----
-
-## Get Reminders
-
-### Endpoint
+### Get Reminders
 
 ```http
 GET /reminders
 ```
 
----
-
-## Send Reminders Job
-
-### Endpoint
+### Send Reminders
 
 ```http
 POST /jobs/send-reminders
 ```
 
-### Logic
-
-```text
-Find ACTIVE Users
-
-Expiry Within 7 Days
-
-Create Reminder Record
-
-Mark Reminder As SENT
-```
-
-### Sample Response
-
-```json
-{
-  "success": true,
-  "reminders_sent": 3
-}
-```
-
-### Collection
+Collection:
 
 ```text
 reminders
 ```
 
-### Example Document
+---
+
+# Monitoring Module
+
+The Monitoring Module simulates operational dashboards and health reporting.
+
+---
+
+## System Monitoring Flow
+
+```text
+Users
+     \
+      \
+Orders ---> Monitoring Job
+      /
+     /
+
+        |
+        v
+
+Monitoring Metrics
+        |
+        v
+
+Dashboard
+```
+
+---
+
+## Run Monitoring Job
+
+```http
+POST /jobs/monitor-system
+```
+
+Example Response:
 
 ```json
 {
-  "user_id": "USR001",
-  "campaign_id": "CMP001",
-  "message": "Your campaign benefit expires soon.",
-  "status": "SENT",
-  "created_at": "2026-08-19T12:00:00"
+  "success": true,
+  "data": {
+    "active_users": 5,
+    "expired_users": 1,
+    "disabled_users": 2,
+    "pending_orders": 3,
+    "completed_orders": 15
+  }
 }
+```
+
+---
+
+## Monitoring Dashboard
+
+```http
+GET /monitoring/dashboard
+```
+
+Example Response:
+
+```json
+{
+  "active_users": 5,
+  "expired_users": 1,
+  "disabled_users": 2,
+  "pending_orders": 3,
+  "completed_orders": 15
+}
+```
+
+---
+
+## Monitoring Logs
+
+```http
+GET /monitoring/logs
+```
+
+Example Response:
+
+```json
+[
+  {
+    "_id": "68a4abcd1234",
+    "active_users": 5,
+    "expired_users": 1,
+    "disabled_users": 2,
+    "pending_orders": 3,
+    "completed_orders": 15,
+    "generated_at": "2026-08-19T12:00:00"
+  }
+]
+```
+
+Collection:
+
+```text
+monitoring_logs
 ```
 
 ---
@@ -578,14 +588,16 @@ orders
 vouchers
 
 reminders
+
+monitoring_logs
 ```
 
-Planned Collections:
+Future Collections:
 
 ```text
-monitoring_logs
-
 notifications
+
+audit_logs
 ```
 
 ---
@@ -615,7 +627,7 @@ Campaign Job Service Clone    → 8002
 
 ✅ Phase 5 - Reminder Module
 
-⬜ Phase 6 - Monitoring Module
+✅ Phase 6 - Monitoring Module
 
 ⬜ Phase 7 - Dockerization & Deployment
 ```
@@ -624,33 +636,17 @@ Campaign Job Service Clone    → 8002
 
 # Upcoming Phase
 
-## Phase 6 - Monitoring Module
+## Phase 7 - Dockerization & Deployment
 
-Features:
+Planned Deliverables:
 
-```text
-Pending Order Alerts
-
-Duplicate Voucher Detection
-
-Monitoring Logs
-
-Operational Metrics
-
-Health Monitoring
-```
-
-Planned APIs:
-
-```http
-POST /jobs/monitor-system
-
-GET /monitoring
-
-GET /monitoring/orders
-
-GET /monitoring/users
-```
+- Dockerfile
+- Docker Compose
+- MongoDB Container
+- Redis Container
+- Environment Configuration
+- One Command Startup
+- Production-style Local Deployment
 
 ---
 
@@ -663,38 +659,44 @@ This project demonstrates:
 - Redis Integration
 - Analytics Processing
 - User Lifecycle Automation
+- Voucher Processing
 - Order Reconciliation
-- Voucher Management
-- Reminder Processing
-- Background Job Design
+- Reminder Management
+- Monitoring & Reporting
 - Microservice Architecture
 
 ---
 
 # Final Goal
 
-The Campaign Job Service Clone aims to replicate the automation backbone of an enterprise campaign platform.
+The Campaign Job Service Clone aims to replicate the automation backbone of a campaign platform.
 
 ```text
 Campaign Data
        |
        v
+
 Analytics Jobs
        |
        v
+
 User Lifecycle Jobs
        |
        v
+
 Order Reconciliation Jobs
        |
        v
+
 Reminder Jobs
        |
        v
+
 Monitoring Jobs
        |
        v
+
 Operational Reports
 ```
 
-By the end of the project, the service will support analytics, lifecycle management, order processing, reminders, monitoring, reporting, and operational automation similar to a real production Campaign Job Service.
+By the end of the project, the service will provide a production-style implementation of analytics, lifecycle management, order processing, reminders, monitoring, and reporting workflows similar to a real enterprise Campaign Job Service.
