@@ -24,6 +24,8 @@ orders_collection = db["orders"]
 
 voucher_collection = db["vouchers"]
 
+reminders_collection = db["reminders"]
+
 redis_client = redis.Redis(
     host=settings.redis_host,
     port=settings.redis_port,
