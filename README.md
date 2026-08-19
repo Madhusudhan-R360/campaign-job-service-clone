@@ -1,106 +1,161 @@
 # Campaign Job Service Clone
 
-A simplified clone of an enterprise Campaign Job Service built using FastAPI, MongoDB, and Redis.
+A simplified clone of an enterprise Campaign Job Service built using FastAPI, MongoDB, Redis, and Docker.
 
-This project simulates the operational automation layer of a campaign management ecosystem. The service handles analytics generation, user lifecycle management, order reconciliation, reminder processing, monitoring, and reporting workflows.
+This project simulates the operational automation layer of a campaign ecosystem. It includes analytics processing, user lifecycle management, order reconciliation, voucher assignment, reminder processing, monitoring, and containerized deployment.
 
 ---
 
 # Project Overview
 
-In a production campaign platform, background services continuously execute operational jobs such as:
+In large-scale campaign platforms, background services execute scheduled and operational jobs that automate business workflows.
 
-- Analytics Generation
-- User Expiry Processing
-- User Disable Processing
+Typical responsibilities include:
+
+- Campaign Analytics
+- User Lifecycle Management
 - Order Reconciliation
 - Voucher Assignment
-- Reminder Processing
+- Reminder Notifications
 - Monitoring & Alerting
 - Operational Reporting
 
-This project recreates those responsibilities using FastAPI and MongoDB in a simplified microservice architecture.
+This clone recreates those workflows in a simplified microservice architecture using FastAPI.
 
 ---
 
-# Current Progress
+# Features Implemented
 
 ## ✅ Phase 1 - Foundation Setup
-
-Implemented:
 
 - FastAPI Application
 - MongoDB Integration
 - Redis Integration
-- Environment Variables
-- Health Check Endpoint
+- Environment Configuration
+- Health Check API
 - Swagger Documentation
 
 ---
 
 ## ✅ Phase 2 - Analytics Module
 
-Implemented:
-
-- Analytics Collection
 - Generate Analytics API
 - Get Analytics API
-- Campaign Analytics API
-- MongoDB Persistence
+- Get Analytics By Campaign API
+- MongoDB Analytics Collection
 
 ---
 
 ## ✅ Phase 3 - User Lifecycle Module
 
-Implemented:
-
-- Users Collection
 - Create User API
 - Get Users API
 - User Expiry Job
 - User Disable Job
 - User Status Management
 
+User Lifecycle:
+
+```text
+ACTIVE
+   |
+   v
+EXPIRED
+   |
+   v
+DISABLED
+```
+
 ---
 
 ## ✅ Phase 4 - Order Reconciliation Module
 
-Implemented:
-
-- Orders Collection
-- Vouchers Collection
 - Create Order API
 - Get Orders API
 - Get Order API
 - Order Reconciliation Job
-- Voucher Assignment Workflow
+- Voucher Assignment
+
+Order Lifecycle:
+
+```text
+CREATED
+   |
+   v
+PENDING
+   |
+   v
+RECONCILIATION JOB
+   |
+   v
+COMPLETED
+   |
+   v
+VOUCHER GENERATED
+```
 
 ---
 
 ## ✅ Phase 5 - Reminder Module
 
-Implemented:
-
-- Reminders Collection
 - Create Reminder API
 - Get Reminders API
 - Reminder Processing Job
 - Expiry Detection Logic
-- Reminder Tracking
+- Reminder History
+
+Reminder Flow:
+
+```text
+User Expiry Approaching
+          |
+          v
+Send Reminder Job
+          |
+          v
+Reminder Created
+          |
+          v
+Status = SENT
+```
 
 ---
 
 ## ✅ Phase 6 - Monitoring Module
 
-Implemented:
-
-- Monitoring Logs Collection
 - Monitoring Dashboard API
 - Monitoring Logs API
-- System Monitoring Job
-- User Metrics Reporting
-- Order Metrics Reporting
+- Monitoring Job
+- User Metrics Tracking
+- Order Metrics Tracking
 - Historical Monitoring Logs
+
+Monitoring Flow:
+
+```text
+Users
+   \
+    \
+Orders ---> Monitoring Job
+    /
+   /
+
+      |
+      v
+
+Monitoring Dashboard
+```
+
+---
+
+## ✅ Phase 7 - Dockerization & Deployment
+
+- Dockerfile
+- Docker Compose
+- MongoDB Container
+- Redis Container
+- Environment Variable Support
+- Complete Local Deployment
 
 ---
 
@@ -174,6 +229,10 @@ campaign-job-service-clone/
 │
 ├── main.py
 │
+├── Dockerfile
+│
+├── docker-compose.yml
+│
 ├── requirements.txt
 │
 ├── .env
@@ -194,15 +253,19 @@ campaign-job-service-clone/
 - Redis
 - Pydantic
 - Uvicorn
+- Docker
+- Docker Compose
 
 ---
 
 # Environment Configuration
 
-Create a `.env` file:
+Create a `.env` file.
+
+Local Development:
 
 ```env
-MONGO_URL=mongodb://localhost:27018
+MONGO_URL=mongodb://localhost:27017
 
 DATABASE_NAME=campaign_job_service
 
@@ -212,7 +275,23 @@ REDIS_PORT=6379
 
 REDIS_DB=0
 
-ENVIRONMENT=DEV
+ENVIRONMENT=LOCAL
+```
+
+Docker Deployment:
+
+```env
+MONGO_URL=mongodb://mongodb:27017
+
+DATABASE_NAME=campaign_job_service
+
+REDIS_HOST=redis
+
+REDIS_PORT=6379
+
+REDIS_DB=0
+
+ENVIRONMENT=DOCKER
 ```
 
 ---
@@ -233,15 +312,15 @@ cd campaign-job-service-clone
 python3 -m venv venv
 ```
 
-## Activate Virtual Environment
+## Activate Environment
 
-Linux / Mac
+Linux / Mac:
 
 ```bash
 source venv/bin/activate
 ```
 
-Windows
+Windows:
 
 ```bash
 venv\Scripts\activate
@@ -255,13 +334,13 @@ pip install -r requirements.txt
 
 ---
 
-# Running The Application
+# Run Application Locally
 
 ```bash
 uvicorn main:app --reload --port 8002
 ```
 
-Application URL:
+Application:
 
 ```text
 http://localhost:8002
@@ -275,309 +354,170 @@ http://localhost:8002/docs
 
 ---
 
-# Health Module
+# Docker Deployment
 
-## Health Check
+## Build Containers
+
+```bash
+docker compose build
+```
+
+## Start Containers
+
+```bash
+docker compose up -d
+```
+
+## Check Containers
+
+```bash
+docker ps
+```
+
+Expected:
+
+```text
+campaign-job-service
+campaign-job-mongo
+campaign-job-redis
+```
+
+---
+
+# Available APIs
+
+## Health
 
 ```http
 GET /health
 ```
 
-Response:
-
-```json
-{
-  "success": true
-}
-```
-
 ---
 
-# Analytics Module
+# Analytics APIs
 
-## Generate Analytics
+Generate Analytics:
 
 ```http
 POST /analytics/generate
 ```
 
-## Get All Analytics
+Get Analytics:
 
 ```http
 GET /analytics
 ```
 
-## Get Analytics By Campaign
+Get Analytics By Campaign:
 
 ```http
 GET /analytics/{campaign_id}
 ```
 
-Collection:
-
-```text
-campaign_analytics
-```
-
 ---
 
-# User Lifecycle Module
+# User APIs
 
-## User Lifecycle Flow
-
-```text
-ACTIVE
-   |
-   v
-
-EXPIRED
-   |
-   v
-
-DISABLED
-```
-
-### Create User
+Create User:
 
 ```http
 POST /users
 ```
 
-### Get Users
+Get Users:
 
 ```http
 GET /users
 ```
 
-### Expire Users
+User Expiry Job:
 
 ```http
 POST /jobs/user-expire
 ```
 
-### Disable Users
+User Disable Job:
 
 ```http
 POST /jobs/user-disable
 ```
 
-Collection:
-
-```text
-users
-```
-
 ---
 
-# Order Reconciliation Module
+# Order APIs
 
-## Order Flow
-
-```text
-ORDER CREATED
-       |
-       v
-
-PENDING
-       |
-       v
-
-/jobs/reconcile-orders
-       |
-       v
-
-COMPLETED
-       |
-       v
-
-Voucher Assigned
-```
-
-### Create Order
+Create Order:
 
 ```http
 POST /orders
 ```
 
-### Get Orders
+Get Orders:
 
 ```http
 GET /orders
 ```
 
-### Get Single Order
+Get Order:
 
 ```http
 GET /orders/{order_id}
 ```
 
-### Reconcile Orders
+Reconcile Orders:
 
 ```http
 POST /jobs/reconcile-orders
 ```
 
-Collections:
-
-```text
-orders
-
-vouchers
-```
-
 ---
 
-# Reminder Module
+# Reminder APIs
 
-## Reminder Flow
-
-```text
-Expiry Approaching
-        |
-        v
-
-/jobs/send-reminders
-        |
-        v
-
-Reminder Generated
-        |
-        v
-
-Reminder Stored
-```
-
-### Create Reminder
+Create Reminder:
 
 ```http
 POST /reminders
 ```
 
-### Get Reminders
+Get Reminders:
 
 ```http
 GET /reminders
 ```
 
-### Send Reminders
+Send Reminders:
 
 ```http
 POST /jobs/send-reminders
 ```
 
-Collection:
-
-```text
-reminders
-```
-
 ---
 
-# Monitoring Module
+# Monitoring APIs
 
-The Monitoring Module simulates operational dashboards and health reporting.
-
----
-
-## System Monitoring Flow
-
-```text
-Users
-     \
-      \
-Orders ---> Monitoring Job
-      /
-     /
-
-        |
-        v
-
-Monitoring Metrics
-        |
-        v
-
-Dashboard
-```
-
----
-
-## Run Monitoring Job
+Run Monitoring Job:
 
 ```http
 POST /jobs/monitor-system
 ```
 
-Example Response:
-
-```json
-{
-  "success": true,
-  "data": {
-    "active_users": 5,
-    "expired_users": 1,
-    "disabled_users": 2,
-    "pending_orders": 3,
-    "completed_orders": 15
-  }
-}
-```
-
----
-
-## Monitoring Dashboard
+Dashboard:
 
 ```http
 GET /monitoring/dashboard
 ```
 
-Example Response:
-
-```json
-{
-  "active_users": 5,
-  "expired_users": 1,
-  "disabled_users": 2,
-  "pending_orders": 3,
-  "completed_orders": 15
-}
-```
-
----
-
-## Monitoring Logs
+Monitoring Logs:
 
 ```http
 GET /monitoring/logs
-```
-
-Example Response:
-
-```json
-[
-  {
-    "_id": "68a4abcd1234",
-    "active_users": 5,
-    "expired_users": 1,
-    "disabled_users": 2,
-    "pending_orders": 3,
-    "completed_orders": 15,
-    "generated_at": "2026-08-19T12:00:00"
-  }
-]
-```
-
-Collection:
-
-```text
-monitoring_logs
 ```
 
 ---
 
 # MongoDB Collections
 
-Implemented Collections:
-
 ```text
 campaign_analytics
 
@@ -592,17 +532,37 @@ reminders
 monitoring_logs
 ```
 
-Future Collections:
+---
+
+# Testing Checklist
 
 ```text
-notifications
+✅ Health API
 
-audit_logs
+✅ Analytics Module
+
+✅ User Lifecycle Module
+
+✅ Order Reconciliation Module
+
+✅ Voucher Generation
+
+✅ Reminder Module
+
+✅ Monitoring Dashboard
+
+✅ Monitoring Logs
+
+✅ MongoDB Integration
+
+✅ Redis Integration
+
+✅ Docker Deployment
 ```
 
 ---
 
-# Local Development Ports
+# Local Ports
 
 ```text
 Campaign CMS Clone            → 8000
@@ -610,43 +570,39 @@ Campaign CMS Clone            → 8000
 Campaign Notification Clone   → 8001
 
 Campaign Job Service Clone    → 8002
+
+MongoDB                       → 27017
+
+Redis                         → 6379
 ```
 
 ---
 
-# Project Progress
+# Future Enhancements
 
 ```text
-✅ Phase 1 - Foundation Setup
+JWT Authentication
 
-✅ Phase 2 - Analytics Module
+Role-Based Access Control
 
-✅ Phase 3 - User Lifecycle Module
+APScheduler Cron Jobs
 
-✅ Phase 4 - Order Reconciliation Module
+Email Notifications
 
-✅ Phase 5 - Reminder Module
+Redis Caching
 
-✅ Phase 6 - Monitoring Module
+Centralized Logging
 
-⬜ Phase 7 - Dockerization & Deployment
+Prometheus Metrics
+
+Grafana Dashboard
+
+Unit Tests
+
+GitHub Actions CI/CD
+
+Kubernetes Deployment
 ```
-
----
-
-# Upcoming Phase
-
-## Phase 7 - Dockerization & Deployment
-
-Planned Deliverables:
-
-- Dockerfile
-- Docker Compose
-- MongoDB Container
-- Redis Container
-- Environment Configuration
-- One Command Startup
-- Production-style Local Deployment
 
 ---
 
@@ -657,19 +613,19 @@ This project demonstrates:
 - FastAPI Development
 - MongoDB CRUD Operations
 - Redis Integration
-- Analytics Processing
-- User Lifecycle Automation
-- Voucher Processing
+- REST API Design
+- Background Job Processing
+- User Lifecycle Management
 - Order Reconciliation
-- Reminder Management
+- Voucher Processing
+- Reminder Automation
 - Monitoring & Reporting
+- Dockerization
 - Microservice Architecture
 
 ---
 
-# Final Goal
-
-The Campaign Job Service Clone aims to replicate the automation backbone of a campaign platform.
+# Final Workflow
 
 ```text
 Campaign Data
@@ -699,4 +655,4 @@ Monitoring Jobs
 Operational Reports
 ```
 
-By the end of the project, the service will provide a production-style implementation of analytics, lifecycle management, order processing, reminders, monitoring, and reporting workflows similar to a real enterprise Campaign Job Service.
+The Campaign Job Service Clone provides a complete end-to-end implementation of a production-inspired campaign operations service with analytics, lifecycle automation, vouchers, reminders, monitoring, MongoDB persistence, Redis integration, and Docker deployment.
